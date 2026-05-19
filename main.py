@@ -348,7 +348,7 @@ async def proxy_image(req: ParseRequest):
 
 @app.get("/api/video")
 async def proxy_video(url: str):
-    """流式代理抖音视频，携带 Cookie 避免 403"""
+    """代理抖音视频，获取完整内容避免 Range 问题"""
     if not url or not url.startswith("http"):
         raise HTTPException(status_code=400, detail="无效的视频 URL")
 
@@ -357,20 +357,26 @@ async def proxy_video(url: str):
                       "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 "
                       "Mobile Safari/537.36",
         "Referer": "https://www.douyin.com/",
-        "Accept": "video/*,*/*;q=0.8",
-        "Accept-Language": "zh-CN,zh;q=0.9",
     }
 
-    async def video_stream():
-        async with httpx.AsyncClient(timeout=120.0, follow_redirects=True) as c:
-            try:
-                await c.get("https://www.iesdouyin.com/", headers=headers)
-            except Exception:
-                pass
-            async with c.stream("GET", url, headers=headers) as resp:
-                if resp.status_code != 200:
-                    return
-                async for chunk in resp.aiter_bytes(chunk_size=65536):
-                    yield chunk
+    async with httpx.AsyncClient(timeout=120.0, follow_redirects=True) as c:
+        # 先获取 Cookie
+        try:
+            await c.get("https://www.iesdouyin.com/", headers=headers)
+        except Exception:
+            pass
+        # 获取视频内容
+        resp = await c.get(url, headers=headers)
+        if resp.status_code not in (200, 206):
+            raise HTTPException(status_code=502, detail=f"视频获取失败 (status={resp.status_code})")
 
-    return StreamingResponse(video_stream(), media_type="video/mp4")
+        content = resp.content
+        content_type = resp.headers.get("content-type", "video/mp4")
+        content_length = resp.headers.get("content-length")
+
+        resp_headers = {"Content-Type": content_type}
+        if content_length:
+            resp_headers["Content-Length"] = content_length
+
+        logger.info("视频代理成功 url=%s size=%d", url[:100], len(content))
+        return HTMLResponse(content=content, media_type=content_type, headers=resp_headers)
