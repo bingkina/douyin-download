@@ -14,7 +14,7 @@ from pathlib import Path
 
 import httpx
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
@@ -344,3 +344,33 @@ async def proxy_image(req: ParseRequest):
             logger.info("无Referer图片代理成功 url=%s size=%d", original_url[:80], len(r2.content))
             return HTMLResponse(content=r2.content, media_type=content_type)
         raise HTTPException(status_code=502, detail=f"图片获取失败 (status={r.status_code})")
+
+
+@app.get("/api/video")
+async def proxy_video(url: str):
+    """流式代理抖音视频，携带 Cookie 避免 403"""
+    if not url or not url.startswith("http"):
+        raise HTTPException(status_code=400, detail="无效的视频 URL")
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Linux; Android 8.0.0; SM-G955U Build/R16NW) "
+                      "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 "
+                      "Mobile Safari/537.36",
+        "Referer": "https://www.douyin.com/",
+        "Accept": "video/*,*/*;q=0.8",
+        "Accept-Language": "zh-CN,zh;q=0.9",
+    }
+
+    async def video_stream():
+        async with httpx.AsyncClient(timeout=120.0, follow_redirects=True) as c:
+            try:
+                await c.get("https://www.iesdouyin.com/", headers=headers)
+            except Exception:
+                pass
+            async with c.stream("GET", url, headers=headers) as resp:
+                if resp.status_code != 200:
+                    return
+                async for chunk in resp.aiter_bytes(chunk_size=65536):
+                    yield chunk
+
+    return StreamingResponse(video_stream(), media_type="video/mp4")

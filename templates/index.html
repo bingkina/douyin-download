@@ -3,7 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>抖音无水印下载</title>
+    <title>抖音无水印下载 - 在线解析视频/图集 | Extract</title>
+    <meta name="description" content="免费在线解析抖音视频和图文，下载无水印原视频和原图。支持短视频、图文笔记、短链接识别，SSR直连解析，无需Cookie和签名。">
+    <meta name="keywords" content="抖音无水印下载,抖音视频下载,抖音图集下载,douyin无水印,抖音分享链接解析,抖音原视频下载,extract.51allai.com">
+    <link rel="canonical" href="https://extract.51allai.com/douyin/">
+    <meta property="og:title" content="抖音无水印下载 - Extract">
+    <meta property="og:description" content="免费在线解析抖音视频和图文，下载无水印原视频和原图。支持短视频、图文笔记、短链接识别。">
+    <meta property="og:url" content="https://extract.51allai.com/douyin/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Extract">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="抖音无水印下载 - Extract">
+    <meta name="twitter:description" content="免费在线解析抖音视频和图文，下载无水印原视频和原图。">
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-47C29C0P6D"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -23,6 +34,33 @@
             align-items: center;
             padding: 40px 20px;
         }
+        a { color: inherit; text-decoration: none; }
+        .top-nav {
+            width: 100%;
+            max-width: 720px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            margin-bottom: 16px;
+            border-bottom: 1px solid #222;
+        }
+        .nav-logo {
+            font-size: 1.1rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #25F4EE, #FE2C55);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .nav-links { display: flex; gap: 16px; }
+        .nav-link {
+            color: #888;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.2s;
+        }
+        .nav-link:hover { color: #fff; }
+        .nav-link.active { color: #25F4EE; font-weight: 600; }
         h1 {
             font-size: 1.8rem;
             font-weight: 600;
@@ -199,6 +237,14 @@
     </style>
 </head>
 <body>
+    <nav class="top-nav">
+        <a href="https://extract.51allai.com/" class="nav-logo">Extract</a>
+        <div class="nav-links">
+            <a href="https://extract.51allai.com/" class="nav-link">首页</a>
+            <a href="https://extract.51allai.com/xiaohongshu" class="nav-link">小红书下载</a>
+            <a href="/douyin" class="nav-link active">抖音下载</a>
+        </div>
+    </nav>
     <h1>抖音无水印下载</h1>
     <p class="subtitle">粘贴分享链接，获取无水印视频/图片</p>
 
@@ -273,13 +319,14 @@
             metaEl.innerHTML = metaHTML;
 
             if (data.type === 'video' && data.video_url) {
+                const videoProxyUrl = './api/video?' + new URLSearchParams({ url: data.video_url }).toString();
                 mediaEl.innerHTML = `
                     <div class="video-section">
                         <video controls preload="metadata" poster="${data.cover ? escapeAttr(data.cover) : ''}">
-                            <source src="${escapeAttr(data.video_url)}" type="video/mp4">
+                            <source src="${escapeAttr(videoProxyUrl)}" type="video/mp4">
                             浏览器不支持视频播放
                         </video>
-                        <a class="download-btn" href="${escapeAttr(data.video_url)}" target="_blank" rel="noopener">
+                        <a class="download-btn" href="${escapeAttr(videoProxyUrl)}" download>
                             ⬇ 下载无水印视频
                         </a>
                     </div>
