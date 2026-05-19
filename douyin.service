@@ -1,0 +1,16 @@
+[Unit]
+Description=Douyin Watermark-Free Download Service
+After=network.target
+
+[Service]
+Type=simple
+User=admin
+Group=admin
+WorkingDirectory=/home/admin/douyin-download
+ExecStart=/home/admin/miniconda3/envs/douyin-download/bin/uvicorn main:app --host 127.0.0.1 --port 8002 --proxy-headers --forwarded-allow-ips=127.0.0.1
+Restart=always
+RestartSec=5
+Environment=PATH=/home/admin/miniconda3/envs/douyin-download/bin
+
+[Install]
+WantedBy=multi-user.target
